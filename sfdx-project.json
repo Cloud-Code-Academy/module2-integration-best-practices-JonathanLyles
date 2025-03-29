@@ -7,6 +7,6 @@
   ],
   "name": "integration-developer-2-best-practices",
   "namespace": "",
-  "sfdcLoginUrl": "https://orgfarm-0526785b16-dev-ed.develop.my.salesforce.com",
+  "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "63.0"
 }
