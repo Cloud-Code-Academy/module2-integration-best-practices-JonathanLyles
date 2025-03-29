@@ -16,8 +16,35 @@ public class ExchangeRateService {
      */
     public static ExchangeRateWrapper getLatestRates() {
         // TODO: Implement the method to make a callout to the Exchange Rate API
-        
-        return null; // Replace with actual implementation
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('callout:' + NAMED_CREDENTIAL + '/latest/' + BASE_CURRENCY);
+        req.setMethod('GET');
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        System.debug(res);
+        try{
+            if(res.getStatusCode() >= 200 && res.getStatusCode() <= 300){
+                ExchangeRateWrapper exchangeRateWrapperData = ExchangeRateWrapper.parse(res.getBody());
+                return exchangeRateWrapperData;
+            }else{
+                throw new ExchangeRateException('Error: Something bad happened, this message is supposed to help you');
+            }
+        }catch(ExchangeRateException e){
+            //Log Error
+            Exchange_Rate_Integration_Log__c log = new Exchange_Rate_Integration_Log__c();
+            log.Type__c = 'ExchangeRateException Error';
+            log.Message__c = 'Error getting rates: ' + e.getMessage();
+            insert log;
+            throw e; //Rethrow so the test can see it
+        }
+        catch(Exception e){
+             //Log Error
+             Exchange_Rate_Integration_Log__c log = new Exchange_Rate_Integration_Log__c();
+             log.Type__c = 'Exception Error';
+             log.Message__c = 'Error getting rates: ' + e.getMessage();
+             insert log;
+        }
+        return null;
     }
     
     /**
@@ -27,8 +54,9 @@ public class ExchangeRateService {
      */
     public static List<Exchange_Rate__c> processRates(ExchangeRateWrapper rateData) {
         // TODO: Implement the method to process rates and create/update records
-        
-        return null; // Replace with actual implementation
+        List<Exchange_Rate__c> exchangeRates = rateData.toExchangeRates();
+        upsert exchangeRates external_Id__c;
+        return exchangeRates; 
     }
     
     /**
@@ -38,9 +66,11 @@ public class ExchangeRateService {
     public static List<Exchange_Rate__c> updateExchangeRates() {
         // TODO: Implement the method to get and process rates
         // 1. Call getLatestRates to retrieve the data
+        ExchangeRateWrapper wrapper = ExchangeRateService.getLatestRates();
         // 2. Call processRates to create/update records
+        List<Exchange_Rate__c> exchangeRates = ExchangeRateService.processRates(wrapper);
         // 3. Return the processed records
-        
-        return null; // Replace with actual implementation
+        upsert exchangeRates external_Id__c;
+        return exchangeRates; // Replace with actual implementation
     }
 }
